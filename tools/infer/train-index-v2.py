@@ -10,7 +10,7 @@ from multiprocessing import cpu_count
 n_cpu = 0
 if n_cpu == 0:
     n_cpu = cpu_count()
-inp_root = "/content/drive/MyDrive/RVC/big/3_feature768"
+inp_root = r"./logs/anz/3_feature768"
 npys = []
 listdir_res = list(os.listdir(inp_root))
 for name in sorted(listdir_res):
@@ -22,6 +22,7 @@ np.random.shuffle(big_npy_idx)
 big_npy = big_npy[big_npy_idx]
 print(big_npy.shape)  # (6196072, 192)#fp32#4.43G
 if big_npy.shape[0] > 2e5:
+    # if(1):
     info = "Trying doing kmeans %s shape to 10k centers." % big_npy.shape[0]
     print(info)
     try:
@@ -43,27 +44,23 @@ if big_npy.shape[0] > 2e5:
 np.save("tools/infer/big_src_feature_mi.npy", big_npy)
 
 ##################train+add
+# big_npy=np.load("/bili-coeus/jupyter/jupyterhub-liujing04/vits_ch/inference_f0/big_src_feature_mi.npy")
 n_ivf = min(int(16 * np.sqrt(big_npy.shape[0])), big_npy.shape[0] // 39)
-
-# Print the computed n_ivf value
-print(f"Computed n_ivf value: {n_ivf}")
-
-index = faiss.index_factory(768, f"IVF{n_ivf},Flat")  # mi
+index = faiss.index_factory(768, "IVF%s,Flat" % n_ivf)  # mi
 print("training")
 index_ivf = faiss.extract_index_ivf(index)  #
 index_ivf.nprobe = 1
 index.train(big_npy)
 faiss.write_index(
-    index, f"tools/infer/trained_IVF{n_ivf}_Flat_baseline_src_feat_v2.index"
+    index, "tools/infer/trained_IVF%s_Flat_baseline_src_feat_v2.index" % (n_ivf)
 )
 print("adding")
 batch_size_add = 8192
 for i in range(0, big_npy.shape[0], batch_size_add):
     index.add(big_npy[i : i + batch_size_add])
 faiss.write_index(
-    index, f"tools/infer/added_IVF{n_ivf}_Flat_mi_baseline_src_feat.index"
+    index, "tools/infer/added_IVF%s_Flat_mi_baseline_src_feat.index" % (n_ivf)
 )
-
 """
 大小（都是FP32）
 big_src_feature 2.95G
@@ -71,4 +68,5 @@ big_src_feature 2.95G
 big_emb         4.43G
     (6196072, 192)
 big_emb双倍是因为求特征要repeat后再加pitch
+
 """
