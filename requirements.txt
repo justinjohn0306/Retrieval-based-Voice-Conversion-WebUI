@@ -43,5 +43,7 @@ onnxruntime-gpu; sys_platform != 'darwin'
 torchcrepe==0.0.20
 fastapi==0.88
 ffmpy==0.3.1
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch==1.13.1+cu117
 python-dotenv>=1.0.0
 av
